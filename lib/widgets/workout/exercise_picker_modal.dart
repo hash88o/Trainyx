@@ -1,5 +1,6 @@
 import 'package:drift/drift.dart' hide Column;
 import 'package:flutter/material.dart';
+import '../../exercises/exercise_search_page.dart';
 import '../../graph/add_exercise_page.dart';
 import '../../main.dart';
 import '../bodypart_tag.dart';
@@ -165,6 +166,68 @@ class _ExercisePickerModalState extends State<ExercisePickerModal> {
                     isDense: true,
                   ),
                   onChanged: (value) => setState(() => _search = value),
+                ),
+              ),
+              // Exercise Library Search Button
+              Padding(
+                padding: const EdgeInsets.fromLTRB(16, 0, 16, 6),
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () async {
+                      final result = await Navigator.push<String>(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => const ExerciseSearchPage(),
+                        ),
+                      );
+                      if (result != null && mounted) {
+                        Navigator.pop(context, result);
+                      }
+                    },
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        vertical: 12,
+                        horizontal: 12,
+                      ),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: colorScheme.primary.withValues(alpha: 0.4),
+                          width: 1.5,
+                        ),
+                        gradient: LinearGradient(
+                          colors: [
+                            colorScheme.primaryContainer.withValues(alpha: 0.5),
+                            colorScheme.secondaryContainer
+                                .withValues(alpha: 0.3),
+                          ],
+                          begin: Alignment.topLeft,
+                          end: Alignment.bottomRight,
+                        ),
+                      ),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.search,
+                            color: colorScheme.primary,
+                            size: 20,
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            'Browse Exercise Library',
+                            style: TextStyle(
+                              color: colorScheme.primary,
+                              fontWeight: FontWeight.w600,
+                              fontSize: 14,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
                 ),
               ),
               // Create Custom Exercise Button
