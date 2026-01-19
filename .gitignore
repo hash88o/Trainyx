@@ -1,0 +1,65 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/.cxx/
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+android/fastlane/report.xml
+fastlane/
+
+# FVM Version Cache
+.fvm/
+
+coverage/
+flexify-release-key.keystore
+/.github/
+/.vscode/
+/.claude/
+notes.md
+task_plan.md
+docs/
+
+# Spotify credentials (use spotify_config.dart.template to create)
+/lib/spotify/spotify_config.dart
+
+# Flutter SDK submodule (local only)
+/flutter/
+
+test/generated_migrations/

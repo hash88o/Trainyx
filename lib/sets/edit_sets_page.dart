@@ -1,0 +1,443 @@
+import 'package:drift/drift.dart';
+import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+import 'package:provider/provider.dart';
+import 'package:timeago/timeago.dart' as timeago;
+
+import '../animated_fab.dart';
+import '../database/database.dart';
+import '../database/gym_sets.dart';
+import '../main.dart';
+import '../plan/plan_state.dart';
+import '../records/records_service.dart';
+import '../settings/settings_state.dart';
+import '../utils.dart';
+
+class EditSetsPage extends StatefulWidget {
+
+  const EditSetsPage({required this.ids, super.key});
+  final List<int> ids;
+
+  @override
+  _EditSetsPageState createState() => _EditSetsPageState();
+}
+
+class _EditSetsPageState extends State<EditSetsPage> {
+  final reps = TextEditingController();
+  final weight = TextEditingController();
+  final distance = TextEditingController();
+  final minutes = TextEditingController();
+  final seconds = TextEditingController();
+  final incline = TextEditingController();
+  final name = TextEditingController();
+  final key = GlobalKey<FormState>();
+
+  String? unit;
+  DateTime? created;
+  bool? cardio;
+  int? restMs;
+  String? category;
+  String? oldNames;
+  String? oldReps;
+  String? oldWeights;
+  String? oldCreated;
+  String? oldDist;
+  String? oldMin;
+  String? oldSec;
+  String? oldInc;
+  String? oldCat;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      resizeToAvoidBottomInset: false,
+      appBar: AppBar(
+        title: Text(
+          'Edit ${widget.ids.length} sets',
+        ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.delete),
+            onPressed: () async {
+              await showDialog(
+                context: context,
+                builder: (BuildContext dialogContext) {
+                  return AlertDialog(
+                    title: const Text('Confirm Delete'),
+                    content: Text(
+                      'Are you sure you want to delete ${widget.ids.length} entries?',
+                    ),
+                    actions: <Widget>[
+                      TextButton.icon(
+                        label: const Text('Cancel'),
+                        icon: const Icon(Icons.close),
+                        onPressed: () {
+                          Navigator.pop(dialogContext);
+                        },
+                      ),
+                      TextButton.icon(
+                        label: const Text('Delete'),
+                        icon: const Icon(Icons.delete),
+                        onPressed: () async {
+                          Navigator.pop(dialogContext);
+                          await db.gymSets
+                              .deleteWhere((u) => u.id.isIn(widget.ids));
+                          if (context.mounted) Navigator.pop(context);
+                        },
+                      ),
+                    ],
+                  );
+                },
+              );
+            },
+          ),
+        ],
+      ),
+      body: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Form(
+          key: key,
+          child: ListView(
+            children: [
+              TextField(
+                controller: name,
+                decoration:
+                    InputDecoration(labelText: 'Name', hintText: oldNames),
+                textCapitalization: TextCapitalization.sentences,
+              ),
+              if (cardio ?? false) ...[
+                TextFormField(
+                  controller: distance,
+                  decoration: InputDecoration(
+                    labelText: 'Distance',
+                    hintText: oldDist,
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  onTap: () => selectAll(distance),
+                  validator: (value) {
+                    if (value == null) return null;
+                    if (double.tryParse(value) == null) return 'Invalid number';
+                    return null;
+                  },
+                ),
+                Row(
+                  children: [
+                    Expanded(
+                      child: TextFormField(
+                        controller: minutes,
+                        decoration: InputDecoration(
+                          labelText: 'Minutes',
+                          hintText: oldMin,
+                        ),
+                        keyboardType: TextInputType.number,
+                        onTap: () => selectAll(minutes),
+                        textInputAction: TextInputAction.next,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return null;
+                          if (int.tryParse(value) == null)
+                            return 'Invalid number';
+                          return null;
+                        },
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: TextFormField(
+                        controller: seconds,
+                        decoration: InputDecoration(
+                          labelText: 'Seconds',
+                          hintText: oldSec,
+                        ),
+                        keyboardType: TextInputType.number,
+                        onTap: () => selectAll(seconds),
+                        textInputAction: TextInputAction.next,
+                        validator: (value) {
+                          if (value == null || value.isEmpty) return null;
+                          if (int.tryParse(value) == null)
+                            return 'Invalid number';
+                          return null;
+                        },
+                      ),
+                    ),
+                  ],
+                ),
+                TextFormField(
+                  controller: incline,
+                  decoration: InputDecoration(
+                    labelText: 'Incline %',
+                    hintText: oldInc,
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  onTap: () => selectAll(incline),
+                  validator: (value) {
+                    if (value == null) return null;
+                    if (double.tryParse(value) == null) return 'Invalid number';
+                    return null;
+                  },
+                ),
+              ],
+              if (cardio == false || cardio == null) ...[
+                TextFormField(
+                  controller: reps,
+                  decoration:
+                      InputDecoration(labelText: 'Reps', hintText: oldReps),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  onTap: () => selectAll(reps),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return null;
+                    if (double.tryParse(value) == null) return 'Invalid number';
+                    return null;
+                  },
+                ),
+                TextFormField(
+                  controller: weight,
+                  decoration: InputDecoration(
+                    labelText: 'Weight',
+                    hintText: oldWeights,
+                  ),
+                  keyboardType: const TextInputType.numberWithOptions(
+                    decimal: true,
+                  ),
+                  onTap: () => selectAll(weight),
+                  validator: (value) {
+                    if (value == null || value.isEmpty) return null;
+                    if (double.tryParse(value) == null) return 'Invalid number';
+                    return null;
+                  },
+                ),
+              ],
+              Selector<SettingsState, bool>(
+                builder: (context, showUnits, child) => Visibility(
+                  visible: showUnits,
+                  child: DropdownButtonFormField<String>(
+                    decoration: const InputDecoration(labelText: 'Unit'),
+                    initialValue: unit,
+                    items: _getUnitItems(),
+                    onChanged: (String? newValue) {
+                      setState(() {
+                        unit = newValue;
+                      });
+                    },
+                  ),
+                ),
+                selector: (context, settings) => settings.value.showUnits,
+              ),
+              StreamBuilder(
+                stream: categoriesStream,
+                builder: (context, snapshot) {
+                  return DropdownButtonFormField(
+                    decoration: InputDecoration(
+                      labelText: 'Category',
+                      hintText: oldCat,
+                    ),
+                    initialValue: category,
+                    items: snapshot.data
+                        ?.map(
+                          (category) => DropdownMenuItem(
+                            value: category,
+                            child: Text(category),
+                          ),
+                        )
+                        .toList(),
+                    onChanged: (value) {
+                      setState(() {
+                        category = value;
+                      });
+                    },
+                  );
+                },
+              ),
+              Selector<SettingsState, String>(
+                builder: (context, longDateFormat, child) {
+                  var subtitle = oldCreated ?? '';
+
+                  if (longDateFormat == 'timeago' && created != null)
+                    subtitle = timeago.format(created!);
+                  else if (longDateFormat != 'timeago' && created != null)
+                    subtitle = DateFormat(longDateFormat).format(created!);
+
+                  return ListTile(
+                    title: const Text('Created Date'),
+                    subtitle: Text(subtitle),
+                    trailing: const Icon(Icons.calendar_today),
+                    onTap: _selectDate,
+                  );
+                },
+                selector: (context, settings) => settings.value.longDateFormat,
+              ),
+            ],
+          ),
+        ),
+      ),
+      floatingActionButton: AnimatedFab(
+        onPressed: save,
+        label: const Text('Update'),
+        icon: const Icon(Icons.sync),
+      ),
+    );
+  }
+
+  List<DropdownMenuItem<String>> _getUnitItems() {
+    if (cardio ?? false) {
+      // Cardio units: distance and energy
+      return const [
+        DropdownMenuItem(
+          value: 'km',
+          child: Text('Kilometers (km)'),
+        ),
+        DropdownMenuItem(
+          value: 'mi',
+          child: Text('Miles (mi)'),
+        ),
+        DropdownMenuItem(
+          value: 'm',
+          child: Text('Meters (m)'),
+        ),
+        DropdownMenuItem(
+          value: 'kcal',
+          child: Text('Kilocalories (kcal)'),
+        ),
+      ];
+    } else {
+      // Strength units: weight
+      return const [
+        DropdownMenuItem(
+          value: 'kg',
+          child: Text('Kilograms (kg)'),
+        ),
+        DropdownMenuItem(
+          value: 'lb',
+          child: Text('Pounds (lb)'),
+        ),
+        DropdownMenuItem(
+          value: 'stone',
+          child: Text('Stone'),
+        ),
+      ];
+    }
+  }
+
+  @override
+  void dispose() {
+    reps.dispose();
+    weight.dispose();
+    distance.dispose();
+    minutes.dispose();
+    seconds.dispose();
+    incline.dispose();
+
+    super.dispose();
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    final settings = context.read<SettingsState>().value;
+
+    (db.gymSets.select()
+          ..where((u) => u.id.isIn(widget.ids))
+          ..limit(3))
+        .get()
+        .then((gymSets) {
+      setState(() {
+        cardio = gymSets.first.cardio;
+        oldNames = gymSets.map((gymSet) => gymSet.name).join(', ');
+        oldReps = gymSets.map((gymSet) => gymSet.reps).join(', ');
+        oldWeights = gymSets.map((gymSet) => gymSet.weight).join(', ');
+        if (settings.longDateFormat == 'timeago')
+          oldCreated = gymSets
+              .map(
+                (gymSet) => timeago.format(gymSet.created),
+              )
+              .join(', ');
+        else
+          oldCreated = gymSets
+              .map(
+                (gymSet) =>
+                    DateFormat(settings.longDateFormat).format(gymSet.created),
+              )
+              .join(', ');
+        oldDist = gymSets.map((gymSet) => gymSet.distance).join(', ');
+        oldMin = gymSets.map((gymSet) => gymSet.duration.floor()).join(', ');
+        oldSec = gymSets
+            .map((gymSet) => ((gymSet.duration * 60) % 60).floor())
+            .join(', ');
+        oldInc = gymSets.map((gymSet) => gymSet.incline).join(', ');
+        oldCat = gymSets.map((gymSet) => gymSet.category).join(', ');
+      });
+    });
+  }
+
+  Future<void> selectTime(DateTime pickedDate) async {
+    final TimeOfDay? pickedTime = await showTimePicker(
+      context: context,
+      initialTime: TimeOfDay.fromDateTime(created ?? DateTime.now()),
+    );
+
+    if (pickedTime != null) {
+      setState(() {
+        created = DateTime(
+          pickedDate.year,
+          pickedDate.month,
+          pickedDate.day,
+          pickedTime.hour,
+          pickedTime.minute,
+        );
+      });
+    }
+  }
+
+  Future<void> save() async {
+    if (!key.currentState!.validate()) return;
+
+    final planState = context.read<PlanState>();
+    Navigator.pop(context);
+
+    final gymSet = GymSetsCompanion(
+      name: name.text.isNotEmpty ? Value(name.text) : const Value.absent(),
+      unit: Value.absentIfNull(unit),
+      created: Value.absentIfNull(created),
+      cardio: Value.absentIfNull(cardio),
+      restMs: Value.absentIfNull(restMs),
+      incline: Value.absentIfNull(int.tryParse(incline.text)),
+      reps: Value.absentIfNull(double.tryParse(reps.text)),
+      weight: Value.absentIfNull(double.tryParse(weight.text)),
+      distance: Value.absentIfNull(double.tryParse(distance.text)),
+      duration: int.tryParse(seconds.text) == null &&
+              int.tryParse(minutes.text) == null
+          ? const Value.absent()
+          : Value(
+              (int.tryParse(seconds.text) ?? 0) / 60 +
+                  (int.tryParse(minutes.text) ?? 0),
+            ),
+      category: Value.absentIfNull(category),
+    );
+
+    await (db.gymSets.update()..where((u) => u.id.isIn(widget.ids)))
+        .write(gymSet);
+
+    // Clear PR cache since sets were modified
+    clearPRCache();
+
+    planState.updateDefaults();
+  }
+
+  Future<void> _selectDate() async {
+    final DateTime? pickedDate = await showDatePicker(
+      context: context,
+      initialDate: created,
+      firstDate: DateTime(2000),
+      lastDate: DateTime(2100),
+    );
+
+    if (pickedDate != null) {
+      selectTime(pickedDate);
+    }
+  }
+}
