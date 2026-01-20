@@ -1,10 +1,9 @@
-import 'dart:math' as math;
-
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../shared/widgets/heatmap/fitness_activity_heatmap.dart';
 
 /// Client Detail Page - iOS HIG style with segmented control
 class ClientDetailPage extends StatefulWidget {
@@ -220,82 +219,9 @@ class _OverviewTab extends StatelessWidget {
   }
 
   Widget _buildWorkoutHeatmap() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: AppColors.surface,
-        borderRadius: BorderRadius.circular(16),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                'Workout Activity',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.secondary.withValues(alpha: 0.15),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text(
-                  'Last 6 months',
-                  style: TextStyle(
-                    color: AppColors.secondary,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                  ),
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 16),
-          
-          // Heatmap Grid
-          _WorkoutHeatmapGrid(),
-          
-          const SizedBox(height: 12),
-          
-          // Legend
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Text(
-                'Less',
-                style: TextStyle(color: AppColors.textTertiary, fontSize: 11),
-              ),
-              const SizedBox(width: 6),
-              ...List.generate(5, (index) {
-                final opacity = index * 0.25;
-                return Container(
-                  width: 12,
-                  height: 12,
-                  margin: const EdgeInsets.symmetric(horizontal: 2),
-                  decoration: BoxDecoration(
-                    color: index == 0 
-                        ? AppColors.surfaceLight
-                        : AppColors.primary.withValues(alpha: opacity),
-                    borderRadius: BorderRadius.circular(2),
-                  ),
-                );
-              }),
-              const SizedBox(width: 6),
-              Text(
-                'More',
-                style: TextStyle(color: AppColors.textTertiary, fontSize: 11),
-              ),
-            ],
-          ),
-        ],
-      ),
+    return FitnessActivityHeatmap(
+      seedKey: clientId,
+      subtitle: 'Consistency over time',
     );
   }
 
@@ -471,100 +397,6 @@ class _DividerTile extends StatelessWidget {
       height: 0.5,
       color: AppColors.surfaceLighter,
     );
-  }
-}
-
-class _WorkoutHeatmapGrid extends StatelessWidget {
-  @override
-  Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final random = math.Random(42); // Fixed seed for consistent mock data
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Month labels
-        Padding(
-          padding: const EdgeInsets.only(left: 24, bottom: 4),
-          child: Row(
-            children: _getMonthLabels(now).map((month) {
-              return Expanded(
-                child: Text(
-                  month,
-                  style: TextStyle(
-                    color: AppColors.textTertiary,
-                    fontSize: 10,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        
-        // Day labels + heatmap
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Day labels
-            Column(
-              children: ['', 'M', '', 'W', '', 'F', ''].map((day) {
-                return SizedBox(
-                  height: 14,
-                  child: Text(
-                    day,
-                    style: TextStyle(
-                      color: AppColors.textTertiary,
-                      fontSize: 9,
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(width: 4),
-            
-            // Heatmap cells
-            Expanded(
-              child: SizedBox(
-                height: 98,
-                child: GridView.builder(
-                  scrollDirection: Axis.horizontal,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 7,
-                    mainAxisSpacing: 3,
-                    crossAxisSpacing: 3,
-                  ),
-                  itemCount: 26 * 7, // ~6 months of weeks
-                  itemBuilder: (context, index) {
-                    final intensity = random.nextDouble();
-                    final hasWorkout = intensity > 0.4;
-                    
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: hasWorkout
-                            ? AppColors.primary.withValues(alpha: intensity * 0.8 + 0.2)
-                            : AppColors.surfaceLight,
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  List<String> _getMonthLabels(DateTime now) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    final result = <String>[];
-    for (int i = 5; i >= 0; i--) {
-      final date = DateTime(now.year, now.month - i, 1);
-      result.add(months[date.month - 1]);
-    }
-    return result;
   }
 }
 
@@ -1772,52 +1604,10 @@ class _ProgressTab extends StatelessWidget {
     return ListView(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       children: [
-        // Workout Heatmap (same as overview)
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: AppColors.surface,
-            borderRadius: BorderRadius.circular(16),
-          ),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Workout Consistency',
-                style: TextStyle(
-                  color: AppColors.textPrimary,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-              const SizedBox(height: 16),
-              _WorkoutHeatmapGrid(),
-              const SizedBox(height: 12),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Text('Less', style: TextStyle(color: AppColors.textTertiary, fontSize: 11)),
-                  const SizedBox(width: 6),
-                  ...List.generate(5, (index) {
-                    final opacity = index * 0.25;
-                    return Container(
-                      width: 12,
-                      height: 12,
-                      margin: const EdgeInsets.symmetric(horizontal: 2),
-                      decoration: BoxDecoration(
-                        color: index == 0 
-                            ? AppColors.surfaceLight
-                            : AppColors.primary.withValues(alpha: opacity),
-                        borderRadius: BorderRadius.circular(2),
-                      ),
-                    );
-                  }),
-                  const SizedBox(width: 6),
-                  Text('More', style: TextStyle(color: AppColors.textTertiary, fontSize: 11)),
-                ],
-              ),
-            ],
-          ),
+        FitnessActivityHeatmap(
+          seedKey: clientId,
+          title: 'Workout Consistency',
+          subtitle: 'Consistency over time',
         ),
 
         const SizedBox(height: 20),

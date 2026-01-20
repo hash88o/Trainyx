@@ -1,8 +1,7 @@
-import 'dart:math' as math;
-
 import 'package:flutter/material.dart';
 
 import '../../../../core/theme/app_theme.dart';
+import '../../../../shared/widgets/heatmap/fitness_activity_heatmap.dart';
 
 /// Progress Page with workout heatmap and dated progress photos
 class ProgressPage extends StatefulWidget {
@@ -117,83 +116,10 @@ class _ActivityTab extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Workout Heatmap
-          Container(
-            padding: const EdgeInsets.all(16),
-            decoration: BoxDecoration(
-              color: AppColors.surface,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  children: [
-                    Text(
-                      'Workout Activity',
-                      style: TextStyle(
-                        color: AppColors.textPrimary,
-                        fontSize: 16,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.secondary.withValues(alpha: 0.15),
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        'Last 6 months',
-                        style: TextStyle(
-                          color: AppColors.secondary,
-                          fontSize: 12,
-                          fontWeight: FontWeight.w500,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 20),
-                
-                // Heatmap Grid
-                const _WorkoutHeatmap(),
-                
-                const SizedBox(height: 14),
-                
-                // Legend
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      'Less',
-                      style: TextStyle(color: AppColors.textTertiary, fontSize: 11),
-                    ),
-                    const SizedBox(width: 6),
-                    ...List.generate(5, (index) {
-                      final opacity = index * 0.25;
-                      return Container(
-                        width: 14,
-                        height: 14,
-                        margin: const EdgeInsets.symmetric(horizontal: 2),
-                        decoration: BoxDecoration(
-                          color: index == 0
-                              ? AppColors.surfaceLight
-                              : AppColors.primary.withValues(alpha: opacity),
-                          borderRadius: BorderRadius.circular(3),
-                        ),
-                      );
-                    }),
-                    const SizedBox(width: 6),
-                    Text(
-                      'More',
-                      style: TextStyle(color: AppColors.textTertiary, fontSize: 11),
-                    ),
-                  ],
-                ),
-              ],
-            ),
+          // Workout Heatmap (fitness-friendly, period-based)
+          const FitnessActivityHeatmap(
+            seedKey: 'progress',
+            subtitle: 'Consistency over time',
           ),
 
           const SizedBox(height: 20),
@@ -270,102 +196,6 @@ class _ActivityTab extends StatelessWidget {
         ],
       ),
     );
-  }
-}
-
-class _WorkoutHeatmap extends StatelessWidget {
-  const _WorkoutHeatmap();
-
-  @override
-  Widget build(BuildContext context) {
-    final now = DateTime.now();
-    final random = math.Random(42); // Fixed seed for consistent mock data
-    
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        // Month labels
-        Padding(
-          padding: const EdgeInsets.only(left: 28, bottom: 6),
-          child: Row(
-            children: _getMonthLabels(now).map((month) {
-              return Expanded(
-                child: Text(
-                  month,
-                  style: TextStyle(
-                    color: AppColors.textTertiary,
-                    fontSize: 11,
-                  ),
-                ),
-              );
-            }).toList(),
-          ),
-        ),
-        
-        // Day labels + heatmap
-        Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // Day labels
-            Column(
-              children: ['', 'M', '', 'W', '', 'F', ''].map((day) {
-                return SizedBox(
-                  height: 16,
-                  child: Text(
-                    day,
-                    style: TextStyle(
-                      color: AppColors.textTertiary,
-                      fontSize: 10,
-                    ),
-                  ),
-                );
-              }).toList(),
-            ),
-            const SizedBox(width: 6),
-            
-            // Heatmap cells
-            Expanded(
-              child: SizedBox(
-                height: 112,
-                child: GridView.builder(
-                  scrollDirection: Axis.horizontal,
-                  physics: const NeverScrollableScrollPhysics(),
-                  gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
-                    crossAxisCount: 7,
-                    mainAxisSpacing: 3,
-                    crossAxisSpacing: 3,
-                  ),
-                  itemCount: 26 * 7,
-                  itemBuilder: (context, index) {
-                    final intensity = random.nextDouble();
-                    final hasWorkout = intensity > 0.35;
-                    
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: hasWorkout
-                            ? AppColors.primary.withValues(alpha: intensity * 0.85 + 0.15)
-                            : AppColors.surfaceLight,
-                        borderRadius: BorderRadius.circular(3),
-                      ),
-                    );
-                  },
-                ),
-              ),
-            ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  List<String> _getMonthLabels(DateTime now) {
-    final months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    final result = <String>[];
-    for (int i = 5; i >= 0; i--) {
-      final date = DateTime(now.year, now.month - i, 1);
-      result.add(months[date.month - 1]);
-    }
-    return result;
   }
 }
 
